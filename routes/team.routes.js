@@ -2,7 +2,7 @@ const express = require("express");
 
 const auth = require("../middleware/auth.middleware");
 
-const Team = require("../models/Team");
+const Team = require("../models/team");
 const cloudinary = require("../cloudinary");
 
 const router = express.Router();

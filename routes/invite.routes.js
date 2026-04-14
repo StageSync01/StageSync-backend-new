@@ -1,5 +1,5 @@
 const express = require("express");
-const Invite = require("../models/Invite");
+const Invite = require("../models/invite");
 
 const router = express.Router();
 
