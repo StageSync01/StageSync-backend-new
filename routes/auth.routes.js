@@ -27,10 +27,10 @@ router.get("/google/register",
 
 router.get("/google/callback",
   passport.authenticate("google", {
-    failureRedirect: `${process.env.FRONTEND_URL}/login?error=google`
+    failureRedirect: "stagesync://login-error"
   }),
   (req, res) => {
-    return res.redirect(`${process.env.FRONTEND_URL}/inicio`);
+    return res.redirect("stagesync://home");
   }
 );
 
