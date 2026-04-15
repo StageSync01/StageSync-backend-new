@@ -58,6 +58,10 @@ app.use("/invite", require("./routes/invite.routes"));
 
 const PORT = process.env.PORT || 3000;
 
+app.get("/", (req, res) => {
+  res.send("API funcionando 🚀");
+});
+
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running on ${PORT}`);
 });
