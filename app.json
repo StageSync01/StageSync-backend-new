@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "StageSync1.0",
-    "slug": "StageSync1.0",
+    "name": "StageSync1",
+    "slug": "stagesync1",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "stagesync10",
+    "scheme": "stagesync",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -38,7 +38,8 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

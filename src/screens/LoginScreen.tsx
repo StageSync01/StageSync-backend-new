@@ -1,12 +1,21 @@
-import React from 'react';
-import { Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import React from "react";
+import {
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+
+import * as WebBrowser from "expo-web-browser";
 
 export default function LoginScreen({ navigation }: any) {
-  
-  const handleGoogleLogin = () => {
-    // Aquí luego conectamos tu backend real
-    Alert.alert("Google Login", "Conectar con backend aquí");
-  };
+
+ const handleGoogleLogin = async () => {
+  await WebBrowser.openBrowserAsync(
+    "https://stagesync-backend-new-production.up.railway.app/auth/google/login"
+  );
+};
 
   return (
     <View style={styles.container}>
@@ -18,12 +27,12 @@ export default function LoginScreen({ navigation }: any) {
 
       <View style={styles.card}>
 
-        {/* Texto registro */}
+        {/* Registro */}
         <Text style={styles.registerText}>
-          ¿No tienes cuenta?{' '}
+          ¿No tienes cuenta?{" "}
           <Text
             style={styles.registerLink}
-            onPress={() => navigation.navigate('Register')}
+            onPress={() => navigation.navigate("Register")}
           >
             Registrarse
           </Text>
@@ -32,19 +41,22 @@ export default function LoginScreen({ navigation }: any) {
         {/* Título */}
         <Text style={styles.title}>Iniciar Sesión</Text>
 
-        {/* Google */}
-        <Pressable style={[styles.socialBtn, styles.google]} onPress={handleGoogleLogin}>
+        {/* GOOGLE REAL */}
+        <Pressable
+          style={[styles.socialBtn, styles.google]}
+          onPress={handleGoogleLogin}
+        >
           <Image
-            source={{ uri: 'https://cdn-icons-png.flaticon.com/512/300/300221.png' }}
+            source={{ uri: "https://cdn-icons-png.flaticon.com/512/300/300221.png" }}
             style={styles.icon}
           />
           <Text style={styles.btnText}>Continuar con Google</Text>
         </Pressable>
 
-        {/* Gmail */}
+         {/* Gmail (lo puedes quitar si quieres) */}
         <Pressable style={[styles.socialBtn, styles.gmail]}>
           <Image
-            source={{ uri: 'https://cdn-icons-png.flaticon.com/512/732/732200.png' }}
+            source={{ uri: "https://cdn-icons-png.flaticon.com/512/732/732200.png" }}
             style={styles.icon}
           />
           <Text style={styles.btnText}>Continuar con Gmail</Text>
