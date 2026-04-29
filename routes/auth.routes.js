@@ -1,5 +1,6 @@
 const express = require("express");
 const passport = require("passport");
+const jwt = require("jsonwebtoken");
 
 const router = express.Router();
 
@@ -7,43 +8,85 @@ const router = express.Router();
    GOOGLE LOGIN
 ========================= */
 
-router.get("/google/login",
-  passport.authenticate("google", {
-    scope: ["profile", "email"],
-    state: "login"
-  })
-);
+router.get("/google/login", (req, res, next) => {
+  // 🔥 La app DEBE mandar esto: stagesync1://auth
+  const redirect = req.query.redirect;
 
-router.get("/google/register",
+  if (!redirect) {
+    return res.status(400).json({
+      error: "Missing redirect URL"
+    });
+  }
+
+  // 🔐 Guardamos el redirect dentro de state
+  const state = encodeURIComponent(
+    JSON.stringify({ redirect })
+  );
+
   passport.authenticate("google", {
     scope: ["profile", "email"],
-    state: "register"
-  })
-);
+    state
+  })(req, res, next);
+});
 
 /* =========================
    CALLBACK
 ========================= */
 
-router.get("/google/callback",
+router.get(
+  "/google/callback",
   passport.authenticate("google", {
-    failureRedirect: "stagesync://login-error"
+    session: false,
+    // 🔥 IMPORTANTE: mismo scheme que tu app.json
+    failureRedirect: "stagesync1://auth?error=auth"
   }),
   (req, res) => {
-    return res.redirect("stagesync://home");
+
+    console.log("👉 CALLBACK HIT");
+
+    // 🔐 Validación
+    if (!req.user) {
+      return res.redirect("stagesync1://auth?error=no_user");
+    }
+
+    // 🔐 Crear token
+    const token = jwt.sign(
+      {
+        id: req.user.id,
+        email: req.user.email
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    let redirect = null;
+
+    // 🔍 Leer state de forma segura
+    try {
+      if (req.query.state) {
+        const parsed = JSON.parse(
+          decodeURIComponent(req.query.state)
+        );
+        redirect = parsed.redirect;
+      }
+    } catch (e) {
+      console.log("❌ Error parsing state:", e);
+    }
+
+    // 🔥 Fallback producción
+    if (!redirect) {
+      redirect = "stagesync1://auth";
+    }
+
+    // 🔧 Construir URL correctamente
+    const separator = redirect.includes("?") ? "&" : "?";
+    const finalUrl = `${redirect}${separator}token=${token}`;
+
+    console.log("🚀 FINAL URL:", finalUrl);
+
+    // 🚀 Redirigir a la app
+    return res.redirect(finalUrl);
   }
 );
-
-/* =========================
-   ME
-========================= */
-
-router.get("/me", (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({ error: "No auth" });
-  }
-
-  res.json(req.user);
-});
 
 module.exports = router;

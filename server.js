@@ -1,11 +1,15 @@
+console.log("🔐 CLIENT ID:", process.env.GOOGLE_CLIENT_ID);
+console.log("🔐 CLIENT SECRET:", process.env.GOOGLE_CLIENT_SECRET);
+
+
 require("dotenv").config();
 
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const session = require("express-session");
 const passport = require("passport");
 
+// 🔥 SOLO inicializar passport (sin session)
 require("./config/passport");
 
 const app = express();
@@ -19,22 +23,19 @@ app.use(cors({
   credentials: true
 }));
 
+app.set("trust proxy", 1);
+
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-app.use(session({
-  secret: process.env.SESSION_SECRET || "secretkey",
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    secure: false,
-    sameSite: "lax"
-  }
-}));
+// ❌ ELIMINAMOS express-session (no lo necesitas con JWT)
+
+/* =========================
+   PASSPORT
+========================= */
 
 app.use(passport.initialize());
-app.use(passport.session());
+// ❌ NO usar passport.session()
 
 /* =========================
    DB
@@ -45,7 +46,7 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.log(err));
 
 /* =========================
-   ROUTES (PRO)
+   ROUTES
 ========================= */
 
 app.use("/auth", require("./routes/auth.routes"));
