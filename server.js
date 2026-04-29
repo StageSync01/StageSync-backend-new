@@ -1,8 +1,7 @@
+require("dotenv").config();
+
 console.log("🔐 CLIENT ID:", process.env.GOOGLE_CLIENT_ID);
 console.log("🔐 CLIENT SECRET:", process.env.GOOGLE_CLIENT_SECRET);
-
-
-require("dotenv").config();
 
 const express = require("express");
 const mongoose = require("mongoose");
