@@ -7,10 +7,29 @@ export const styles = StyleSheet.create({
     backgroundColor: "#020617",
   },
 
+navbar: {
+  position: "absolute",
+  bottom: 0,
+  left: 0,
+  right: 0,
+  height: 80,
+  borderTopLeftRadius: 15,
+  borderTopRightRadius: 15,
+  overflow: "hidden",
+  flexDirection: "row",
+  justifyContent: "space-around",
+  alignItems: "center",
+  backgroundColor: "rgba(255, 255, 255, 0.02)",
+  borderTopWidth: 1,
+  borderColor: "rgba(255,255,255,0.1)",
+  elevation: 20,
+},
+
   title: {
     marginLeft: 20,
-    marginTop: 20,
-    fontSize: 25,
+    marginTop: 60,
+    marginBottom: 20,
+    fontSize: 30,
     color: "white",
   },
 
@@ -158,18 +177,6 @@ export const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 16,
-  },
-
-  /* NAVBAR */
-  navbar: {
-    position: "absolute",
-    bottom: 0,
-    width: "100%",
-    height: 90,
-    backgroundColor: "#020617",
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
   },
 
   /* HELPERS */

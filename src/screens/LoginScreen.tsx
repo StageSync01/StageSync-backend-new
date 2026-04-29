@@ -1,33 +1,76 @@
-import React from "react";
-import {
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
-
+import * as AuthSession from "expo-auth-session";
+import * as Linking from "expo-linking";
+import * as SecureStore from "expo-secure-store";
 import * as WebBrowser from "expo-web-browser";
+import React from "react";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
-export default function LoginScreen({ navigation }: any) {
+WebBrowser.maybeCompleteAuthSession();
 
- const handleGoogleLogin = async () => {
-  await WebBrowser.openBrowserAsync(
-    "https://stagesync-backend-new-production.up.railway.app/auth/google/login"
-  );
-};
+export default function LoginScreen({ navigation, setIsLogged }: any) {
+
+  const handleGoogleLogin = async () => {
+    try {
+      // 🔥 Redirect correcto basado en tu scheme
+      const redirectUrl = AuthSession.makeRedirectUri({
+        scheme: "stagesync1",
+        path: "auth"
+      });
+
+      console.log("🔗 REDIRECT:", redirectUrl);
+
+      // 🔥 CORRECTO: enviar "redirect", NO "state"
+      const authUrl = `https://stagesync-backend-new-production.up.railway.app/auth/google/login?redirect=${encodeURIComponent(
+        redirectUrl
+      )}`;
+
+      const result = await WebBrowser.openAuthSessionAsync(
+        authUrl,
+        redirectUrl
+      );
+
+      console.log("RESULT:", result);
+
+    if (result.type === "success" && result.url) {
+
+  console.log("URL COMPLETA:", result.url);
+
+  const data = Linking.parse(result.url);
+
+  let token = data.queryParams?.token;
+
+  // 🔥 Si viene como array, tomar el primero
+  if (Array.isArray(token)) {
+    token = token[0];
+  }
+
+  // 🔥 Validar que sea string válido
+  if (typeof token === "string" && token.length > 0) {
+    console.log("✅ TOKEN:", token);
+
+    await SecureStore.setItemAsync("token", token);
+    setIsLogged(true);
+
+    setIsLogged(true);
+  } else {
+    console.log("❌ Token inválido:", token);
+  }
+}
+
+    } catch (error) {
+      console.log("❌ ERROR:", error);
+    }
+  };
 
   return (
     <View style={styles.container}>
 
-      {/* Botón regresar */}
       <Pressable style={styles.backBtn} onPress={() => navigation.goBack()}>
         <Text style={styles.backText}>←</Text>
       </Pressable>
 
       <View style={styles.card}>
 
-        {/* Registro */}
         <Text style={styles.registerText}>
           ¿No tienes cuenta?{" "}
           <Text
@@ -38,10 +81,8 @@ export default function LoginScreen({ navigation }: any) {
           </Text>
         </Text>
 
-        {/* Título */}
         <Text style={styles.title}>Iniciar Sesión</Text>
 
-        {/* GOOGLE REAL */}
         <Pressable
           style={[styles.socialBtn, styles.google]}
           onPress={handleGoogleLogin}
@@ -53,8 +94,10 @@ export default function LoginScreen({ navigation }: any) {
           <Text style={styles.btnText}>Continuar con Google</Text>
         </Pressable>
 
-         {/* Gmail (lo puedes quitar si quieres) */}
-        <Pressable style={[styles.socialBtn, styles.gmail]}>
+        <Pressable
+          style={[styles.socialBtn, styles.gmail]}
+          onPress={handleGoogleLogin}
+        >
           <Image
             source={{ uri: "https://cdn-icons-png.flaticon.com/512/732/732200.png" }}
             style={styles.icon}
@@ -76,7 +119,7 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    backgroundColor: 'rgba(255,255,255,0.05)', // glass effect
+    backgroundColor: 'rgba(255,255,255,0.05)',
     padding: 30,
     borderRadius: 20,
     width: '85%',
@@ -127,11 +170,6 @@ const styles = StyleSheet.create({
   btnText: {
     color: '#ffffff',
     fontWeight: 'bold',
-  },
-
-  googleText: {
-    color: '#000',
-    fontWeight: '600',
   },
 
   backBtn: {

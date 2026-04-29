@@ -1,131 +1,181 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import {
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
+
+import CalendarModal from "../components/CalendarModal";
 import { styles } from "../styles/StartStyles";
 
-export default function Inicio() {
+export default function Inicio({ navigation }: any) {
+
+  const [showCalendar, setShowCalendar] = useState(false);
+
+  // 🔥 Fecha optimizada (no recalcula en cada render)
+  const currentMonth = useMemo(() => {
+    return new Date().toLocaleDateString("es-ES", {
+      month: "long",
+      year: "numeric"
+    });
+  }, []);
+
   return (
-    <ScrollView style={styles.container}>
+    <View style={{ flex: 1 }}>
 
-      {/* TITLE */}
-      <Text style={styles.title}>Inicio</Text>
+      {/* CONTENIDO */}
+      <ScrollView
+        style={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
 
-      {/* HOME */}
-      <View style={styles.homeContainer}>
+        {/* TITLE */}
+        <Text style={styles.title}>Inicio</Text>
 
-        {/* TEAM */}
-        <View style={styles.teamCard} />
+        {/* HOME */}
+        <View style={styles.homeContainer}>
 
-        {/* ROW */}
-        <View style={styles.homeRow}>
+          {/* TEAM */}
+          <View style={styles.teamCard} />
 
-          {/* CALENDAR */}
-          <TouchableOpacity style={styles.calendarCard}>
-            <View style={styles.calendarHeader}>
-              <Text style={styles.month}>Jun 2026</Text>
+          {/* ROW */}
+          <View style={styles.homeRow}>
 
-              <View style={styles.row}>
-                <TouchableOpacity>
+            {/* CALENDAR */}
+            <TouchableOpacity
+              style={styles.calendarCard}
+              activeOpacity={0.8}
+              onPress={() => setShowCalendar(true)}
+            >
+              <View style={styles.calendarHeader}>
+
+                <Text style={styles.month}>
+                  {currentMonth}
+                </Text>
+
+                {/* Solo visual (no funcional aquí) */}
+                <View style={styles.row}>
                   <Text style={styles.white}>{"<"}</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity>
                   <Text style={styles.white}>{">"}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
+                </View>
 
-            <Text style={styles.gray}>Días del calendario</Text>
-          </TouchableOpacity>
-
-          {/* FAVORITES */}
-          <TouchableOpacity style={styles.favoritesCard}>
-            <Text style={styles.cardLabel}>Favoritos</Text>
-
-            <View style={styles.favoritesContent}>
-              <View>
-                <Text style={styles.favTitle}>Tus canciones</Text>
-                <Text style={styles.gray}>Acceso rápido</Text>
               </View>
 
-              <Text style={styles.star}>★</Text>
-            </View>
-          </TouchableOpacity>
+              <Text style={styles.gray}>
+                Abrir calendario
+              </Text>
+            </TouchableOpacity>
 
+            {/* FAVORITES */}
+            <TouchableOpacity
+              style={styles.favoritesCard}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.cardLabel}>Favoritos</Text>
+
+              <View style={styles.favoritesContent}>
+                <View>
+                  <Text style={styles.favTitle}>
+                    Tus canciones
+                  </Text>
+                  <Text style={styles.gray}>
+                    Acceso rápido
+                  </Text>
+                </View>
+
+                <Text style={styles.star}>★</Text>
+              </View>
+            </TouchableOpacity>
+
+          </View>
         </View>
-      </View>
 
-      {/* PROXIMOS */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Próximos</Text>
+        {/* PROXIMOS */}
+        <View style={styles.section}>
 
-        {/* EMPTY */}
-        <View style={styles.emptyCard}>
-          <Text style={styles.icon}>📅</Text>
-          <Text style={styles.emptyTitle}>
-            Nada planificado todavía
+          <Text style={styles.sectionTitle}>
+            Próximos
           </Text>
-          <Text style={styles.gray}>
-            No hay eventos aún
-          </Text>
-        </View>
 
-        {/* EVENT CARD */}
-        <View style={styles.eventCard}>
-          <View>
-            <Text style={styles.date}>24 Mar</Text>
-            <Text style={styles.eventTitle}>Nombre del evento</Text>
-            <Text style={styles.gray}>Iglesia Central</Text>
+          <View style={styles.emptyCard}>
+            <Text style={styles.icon}>📅</Text>
+
+            <Text style={styles.emptyTitle}>
+              Nada planificado todavía
+            </Text>
+
+            <Text style={styles.gray}>
+              No hay eventos aún
+            </Text>
           </View>
 
-          <TouchableOpacity style={styles.button}>
-            <Text style={styles.buttonText}>Ver</Text>
-          </TouchableOpacity>
         </View>
-      </View>
 
-      {/* MINI PLAYER */}
-      <View style={styles.miniPlayer}>
-        <Text style={styles.white}>🎵 Sin canción</Text>
-        <TouchableOpacity>
-          <Text style={styles.white}>▶️</Text>
-        </TouchableOpacity>
-      </View>
+      </ScrollView>
 
-      {/* NAVBAR */}
-      <View style={styles.navbar}>
+      {/* 🔥 MODAL CALENDARIO */}
+      <CalendarModal
+        visible={showCalendar}
+        onClose={() => setShowCalendar(false)}
+      />
 
-        <TouchableOpacity>
+      {/* 🔥 NAVBAR GLASS PRO */}
+      <BlurView
+        intensity={90}
+        tint="dark"
+        style={styles.navbar}
+      >
+
+        <TouchableOpacity
+          style={{ alignItems: "center" }}
+          onPress={() => navigation.navigate("Start")}
+        >
+          <Ionicons name="home" size={22} color="white" />
           <Text style={styles.white}>Inicio</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity>
+        <TouchableOpacity
+          style={{ alignItems: "center" }}
+          onPress={() => navigation.navigate("Songs")}
+        >
+          <Ionicons name="musical-notes" size={22} color="white" />
           <Text style={styles.white}>Canciones</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity>
+        <TouchableOpacity
+          style={{ alignItems: "center" }}
+          onPress={() => navigation.navigate("Instruments")}
+        >
+          <MaterialCommunityIcons
+            name="guitar-electric"
+            size={22}
+            color="white"
+          />
           <Text style={styles.white}>Instrumentos</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity>
+        <TouchableOpacity
+          style={{ alignItems: "center" }}
+          onPress={() => navigation.navigate("Events")}
+        >
+          <Ionicons name="calendar" size={22} color="white" />
           <Text style={styles.white}>Eventos</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity>
+        <TouchableOpacity
+          style={{ alignItems: "center" }}
+          onPress={() => navigation.navigate("Stage")}
+        >
+          <Ionicons name="mic" size={22} color="white" />
           <Text style={styles.white}>Escenario</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity>
-          <Text style={styles.white}>Ajustes</Text>
-        </TouchableOpacity>
+      </BlurView>
 
-      </View>
-
-    </ScrollView>
+    </View>
   );
 }
