@@ -1,5 +1,6 @@
 require("dotenv").config();
 
+console.log("🔥🔥🔥 NUEVO BUILD BACKEND 🔥🔥🔥");
 console.log("🔐 CLIENT ID:", process.env.GOOGLE_CLIENT_ID);
 console.log("🔐 CLIENT SECRET:", process.env.GOOGLE_CLIENT_SECRET);
 
