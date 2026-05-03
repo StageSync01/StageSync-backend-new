@@ -73,7 +73,12 @@ router.get(
       console.log("❌ Error parsing state:", e);
     }
 
-    // 🔥 Fallback producción
+    // � Fallback si la app envía redirect directo en callback
+    if (!redirect && req.query.redirect) {
+      redirect = req.query.redirect;
+    }
+
+    // �🔥 Fallback producción
     if (!redirect) {
       redirect = "stagesync1://auth";
     }

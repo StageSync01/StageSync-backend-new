@@ -11,7 +11,9 @@ passport.use(
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
 
       // 🔥 Debe coincidir EXACTAMENTE con Google Cloud Console
-      callbackURL: "https://stagesync-backend-new-production.up.railway.app/auth/google/callback",
+      callbackURL:
+        process.env.GOOGLE_CALLBACK_URL ||
+        "https://stagesync-backend-new-production.up.railway.app/auth/google/callback",
 
       // 🔥 Necesario en Railway / proxies
       proxy: true,
