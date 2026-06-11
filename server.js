@@ -50,6 +50,7 @@ mongoose.connect(process.env.MONGO_URI)
 ========================= */
 
 app.use("/auth", require("./routes/auth.routes"));
+app.use("/user", require("./routes/user.routes"));
 app.use("/team", require("./routes/team.routes"));
 app.use("/invite", require("./routes/invite.routes"));
 
@@ -61,6 +62,17 @@ const PORT = process.env.PORT || 3000;
 
 app.get("/", (req, res) => {
   res.send("API funcionando 🚀");
+});
+
+// 🔥 ENDPOINT DE DEBUG - Verificar que el código está actualizado
+app.get("/debug/auth", (req, res) => {
+  res.json({
+    status: "ok",
+    message: "✅ Código actualizado - JWT authentication habilitada",
+    timestamp: new Date().toISOString(),
+    jwt_secret: process.env.JWT_SECRET ? "✅ Definida" : "❌ Falta JWT_SECRET en .env",
+    mongo_uri: process.env.MONGO_URI ? "✅ Definida" : "❌ Falta MONGO_URI en .env"
+  });
 });
 
 app.listen(PORT, "0.0.0.0", () => {
