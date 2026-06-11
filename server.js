@@ -68,8 +68,9 @@ app.get("/", (req, res) => {
 app.get("/debug/auth", (req, res) => {
   res.json({
     status: "ok",
-    message: "✅ Código actualizado - JWT authentication habilitada",
+    message: "✅ Código actualizado - JWT authentication + /user/profile + /team endpoints habilitados",
     timestamp: new Date().toISOString(),
+    endpoints: ["/user/profile", "/user/settings", "/team", "/team/create"],
     jwt_secret: process.env.JWT_SECRET ? "✅ Definida" : "❌ Falta JWT_SECRET en .env",
     mongo_uri: process.env.MONGO_URI ? "✅ Definida" : "❌ Falta MONGO_URI en .env"
   });
