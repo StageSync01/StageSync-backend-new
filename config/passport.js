@@ -28,18 +28,50 @@ passport.use(
           return done(new Error("No profile from Google"), null);
         }
 
-        let user = await User.findOne({ googleId: profile.id });
+        const email = profile.emails?.[0]?.value;
+        if (!email) {
+          return done(new Error("No email from Google"), null);
+        }
 
-        if (!user) {
+        let mode = "login";
+        if (req.query.state) {
+          try {
+            const state = JSON.parse(decodeURIComponent(req.query.state));
+            mode = state?.mode || "login";
+          } catch (e) {
+            console.log("❌ Error parsing state in passport:", e);
+          }
+        }
+
+        let user = await User.findOne({ email });
+
+        if (mode === "login") {
+          if (!user) {
+            return done(null, false, { message: "user_not_found" });
+          }
+
+          if (!user.googleId) {
+            user.googleId = profile.id;
+            await user.save();
+          }
+
+          return done(null, user);
+        }
+
+        if (mode === "register") {
+          if (user) {
+            return done(null, false, { message: "already_registered" });
+          }
+
           user = await User.create({
             googleId: profile.id,
             name: profile.displayName,
-            email: profile.emails?.[0]?.value || ""
+            email
           });
+          return done(null, user);
         }
 
-        return done(null, user);
-
+        return done(null, false, { message: "invalid_mode" });
       } catch (error) {
         return done(error, null);
       }

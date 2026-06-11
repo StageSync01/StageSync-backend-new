@@ -4,12 +4,7 @@ const jwt = require("jsonwebtoken");
 
 const router = express.Router();
 
-/* =========================
-   GOOGLE LOGIN
-========================= */
-
-router.get("/google/login", (req, res, next) => {
-  // 🔥 La app DEBE mandar esto: stagesync1://auth
+const startGoogleAuth = (mode) => (req, res, next) => {
   const redirect = req.query.redirect;
 
   if (!redirect) {
@@ -18,80 +13,64 @@ router.get("/google/login", (req, res, next) => {
     });
   }
 
-  // 🔐 Guardamos el redirect dentro de state
   const state = encodeURIComponent(
-    JSON.stringify({ redirect })
+    JSON.stringify({ redirect, mode })
   );
 
   passport.authenticate("google", {
     scope: ["profile", "email"],
-    state
+    state,
+    prompt: "select_account"
   })(req, res, next);
-});
+};
+
+router.get("/google/login", startGoogleAuth("login"));
+router.get("/google/register", startGoogleAuth("register"));
 
 /* =========================
    CALLBACK
 ========================= */
 
-router.get(
-  "/google/callback",
-  passport.authenticate("google", {
-    session: false,
-    // 🔥 IMPORTANTE: mismo scheme que tu app.json
-    failureRedirect: "stagesync1://auth?error=auth"
-  }),
-  (req, res) => {
-
-    console.log("👉 CALLBACK HIT");
-
-    // 🔐 Validación
-    if (!req.user) {
-      return res.redirect("stagesync1://auth?error=no_user");
+router.get("/google/callback", (req, res, next) => {
+  passport.authenticate("google", { session: false }, (err, user, info) => {
+    if (err) {
+      console.error("Passport error:", err);
+      return res.redirect("stagesync1://auth?error=auth");
     }
 
-    // 🔐 Crear token
-    const token = jwt.sign(
-      {
-        id: req.user.id,
-        email: req.user.email
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    let redirect = "stagesync1://auth";
 
-    let redirect = null;
-
-    // 🔍 Leer state de forma segura
     try {
       if (req.query.state) {
-        const parsed = JSON.parse(
-          decodeURIComponent(req.query.state)
-        );
-        redirect = parsed.redirect;
+        const parsed = JSON.parse(decodeURIComponent(req.query.state));
+        redirect = parsed.redirect || redirect;
       }
     } catch (e) {
       console.log("❌ Error parsing state:", e);
     }
 
-    // � Fallback si la app envía redirect directo en callback
-    if (!redirect && req.query.redirect) {
-      redirect = req.query.redirect;
+    if (!user) {
+      const errorCode = info?.message || "auth";
+      const separator = redirect.includes("?") ? "&" : "?";
+      return res.redirect(`${redirect}${separator}error=${encodeURIComponent(errorCode)}`);
     }
 
-    // �🔥 Fallback producción
-    if (!redirect) {
-      redirect = "stagesync1://auth";
-    }
+    const token = jwt.sign(
+      {
+        id: user.id,
+        email: user.email
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
 
-    // 🔧 Construir URL correctamente
     const separator = redirect.includes("?") ? "&" : "?";
-    const finalUrl = `${redirect}${separator}token=${token}`;
+    const finalUrl = `${redirect}${separator}token=${encodeURIComponent(token)}`;
 
     console.log("🚀 FINAL URL:", finalUrl);
 
-    // 🚀 Redirigir a la app
     return res.redirect(finalUrl);
-  }
-);
+  })(req, res, next);
+});
 
 module.exports = router;
