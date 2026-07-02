@@ -318,28 +318,29 @@ router.post("/test-upload", verifyToken, async (req, res) => {
       message: "Upload exitoso"
     });
 
-  } catch (cloudError) {
-    console.error("❌ [TEST] Error en Cloudinary:");
-    console.error("❌ [TEST] Tipo:", cloudError.constructor.name);
-    console.error("❌ [TEST] Mensaje:", cloudError.message);
-    console.error("❌ [TEST] HTTP Code:", cloudError.http_code);
-    console.error("❌ [TEST] Status:", cloudError.status);
-    
-    if (cloudError.error) {
-      console.error("❌ [TEST] Error property:", JSON.stringify(cloudError.error));
-    }
-
-    return res.status(500).json({
-      success: false,
-      error: cloudError.message,
-      http_code: cloudError.http_code,
-      message: "Error en Cloudinary"
-    });
-
   } catch (err) {
-    console.error("❌ [TEST] Error general inesperado:");
+    console.error("❌ [TEST] Error:");
     console.error("❌ [TEST] Tipo:", err.constructor.name);
     console.error("❌ [TEST] Mensaje:", err.message);
+    
+    // Si es error de Cloudinary
+    if (err.http_code) {
+      console.error("❌ [TEST] HTTP Code:", err.http_code);
+      console.error("❌ [TEST] Status:", err.status);
+      
+      if (err.error) {
+        console.error("❌ [TEST] Error property:", JSON.stringify(err.error));
+      }
+
+      return res.status(500).json({
+        success: false,
+        error: err.message,
+        http_code: err.http_code,
+        message: "Error en Cloudinary"
+      });
+    }
+
+    // Error general
     console.error("❌ [TEST] Stack:", err.stack);
 
     return res.status(500).json({
