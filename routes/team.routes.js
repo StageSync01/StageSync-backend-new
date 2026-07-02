@@ -7,54 +7,82 @@ const cloudinary = require("../cloudinary");
 const router = express.Router();
 
 /* =========================
-   CREATE TEAM - 🔥 CON JWT
+   CREATE TEAM - JWT + CLOUDINARY FIX
 ========================= */
 
 router.post("/create", verifyToken, async (req, res) => {
   try {
     console.log("🔥 [Team] Creando equipo...");
-    console.log("📧 [Team] Email del usuario:", req.userEmail);
-    console.log("👤 [Team] ID del usuario:", req.userId);
-    
+    console.log("📧 Email:", req.userEmail);
+    console.log("👤 UserID:", req.userId);
+
     const email = req.userEmail.toLowerCase();
     const userId = req.userId;
 
-    // Verificar si ya tiene equipo
+    // verificar si ya tiene equipo
     const exists = await Team.findOne({ userEmail: email });
     if (exists) {
-      return res.status(400).json({ success: false, message: "Ya tienes un equipo" });
+      return res.status(400).json({
+        success: false,
+        message: "Ya tienes un equipo"
+      });
     }
 
-    // Obtener datos del usuario
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ success: false, message: "Usuario no encontrado" });
+      return res.status(404).json({
+        success: false,
+        message: "Usuario no encontrado"
+      });
     }
 
     let imageUrl = null;
 
-    // 🔥 Subir imagen a Cloudinary si viene
-    if (req.body.image && req.body.image.startsWith('data:')) {
-      try {
-        console.log("📸 [Team] Subiendo imagen a Cloudinary...");
-        const upload = await cloudinary.uploader.upload(req.body.image, {
-          folder: "teams",
-          transformation: [{ width: 500, height: 500, crop: "fill" }]
-        });
-        imageUrl = upload.secure_url;
-        console.log("✅ [Team] Imagen subida:", imageUrl);
-      } catch (cloudError) {
-        console.error('❌ [Team] Error subiendo imagen:', cloudError.message);
+    // =========================
+    // 🔥 UPLOAD CLOUDINARY FIX
+    // =========================
+    if (req.body.image) {
+      console.log("📸 Imagen recibida (preview):", req.body.image.substring(0, 50));
+
+      if (req.body.image.startsWith("data:")) {
+        try {
+          console.log("☁️ Subiendo imagen a Cloudinary...");
+
+          const upload = await cloudinary.uploader.upload(req.body.image, {
+            folder: "teams",
+            resource_type: "auto",
+            transformation: [
+              { width: 500, height: 500, crop: "fill" }
+            ]
+          });
+
+          imageUrl = upload.secure_url;
+
+          console.log("✅ Imagen subida correctamente:", imageUrl);
+
+        } catch (cloudError) {
+          console.error("❌ CLOUDINARY ERROR COMPLETO:");
+          console.error("Error:", cloudError.message);
+          console.error("Status:", cloudError.status);
+          console.error("Stack:", cloudError.stack);
+        }
+      } else {
+        console.log("⚠️ Imagen no es base64 válida");
       }
+    } else {
+      console.log("⚠️ No se recibió imagen");
     }
 
-    // Crear equipo
-    console.log("💾 [Team] Guardando equipo en BD...");
+    // =========================
+    // CREATE TEAM
+    // =========================
+    console.log("💾 Guardando equipo...");
+
     const team = await Team.create({
       userEmail: email,
       name: req.body.name?.trim(),
       description: req.body.description || "",
-      image: imageUrl,
+      image: imageUrl, // 👈 aquí ya es seguro
       members: [
         {
           name: user.name,
@@ -65,20 +93,29 @@ router.post("/create", verifyToken, async (req, res) => {
       ]
     });
 
-    // 🔥 Actualizar usuario con su equipo seleccionado
-    await User.findByIdAndUpdate(userId, { selectedTeam: team._id });
+    await User.findByIdAndUpdate(userId, {
+      selectedTeam: team._id
+    });
 
-    console.log(`✅ [Team] Equipo creado para ${email}`);
-    res.json({ success: true, team });
+    console.log("✅ Equipo creado correctamente:", email);
+
+    res.json({
+      success: true,
+      team
+    });
 
   } catch (err) {
-    console.error('❌ [Team] Error creando equipo:', err);
-    res.status(500).json({ success: false, message: "Error creando equipo", error: err.message });
+    console.error("❌ ERROR CREANDO TEAM:", err);
+    res.status(500).json({
+      success: false,
+      message: "Error creando equipo",
+      error: err.message
+    });
   }
 });
 
 /* =========================
-   GET TEAM - 🔥 CON JWT
+   GET TEAM
 ========================= */
 
 router.get("/", verifyToken, async (req, res) => {
@@ -93,14 +130,15 @@ router.get("/", verifyToken, async (req, res) => {
     });
 
     res.json({ team: team || null });
+
   } catch (err) {
-    console.error('❌ Error obteniendo equipo:', err);
+    console.error("❌ Error obteniendo equipo:", err);
     res.status(500).json({ error: "Error servidor" });
   }
 });
 
 /* =========================
-   UPDATE TEAM - 🔥 CON JWT
+   UPDATE TEAM
 ========================= */
 
 router.put("/update", verifyToken, async (req, res) => {
@@ -109,16 +147,19 @@ router.put("/update", verifyToken, async (req, res) => {
 
     let imageUrl = null;
 
-    // 🔥 Subir imagen si viene
-    if (req.body.image && req.body.image.startsWith('data:')) {
+    if (req.body.image && req.body.image.startsWith("data:")) {
       try {
         const upload = await cloudinary.uploader.upload(req.body.image, {
           folder: "teams",
-          transformation: [{ width: 500, height: 500, crop: "fill" }]
+          transformation: [
+            { width: 500, height: 500, crop: "fill" }
+          ]
         });
+
         imageUrl = upload.secure_url;
+
       } catch (cloudError) {
-        console.error('❌ Error subiendo imagen:', cloudError);
+        console.error("❌ CLOUDINARY UPDATE ERROR:", cloudError);
       }
     }
 
@@ -138,15 +179,21 @@ router.put("/update", verifyToken, async (req, res) => {
     );
 
     if (!updated) {
-      return res.status(404).json({ message: "Equipo no encontrado" });
+      return res.status(404).json({
+        message: "Equipo no encontrado"
+      });
     }
 
-    console.log(`✅ Equipo actualizado para ${email}`);
-    res.json({ message: "Equipo actualizado", team: updated });
+    res.json({
+      message: "Equipo actualizado",
+      team: updated
+    });
 
   } catch (err) {
-    console.error('❌ Error actualizando equipo:', err);
-    res.status(500).json({ message: "Error servidor" });
+    console.error("❌ Error actualizando equipo:", err);
+    res.status(500).json({
+      message: "Error servidor"
+    });
   }
 });
 
