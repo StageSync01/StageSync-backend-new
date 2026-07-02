@@ -32,6 +32,8 @@ exports.updateProfile = async (req, res) => {
     if (preferences !== undefined) updateData.preferences = preferences;
     if (selectedTeam !== undefined) updateData.selectedTeam = selectedTeam;
 
+    updateData.lastUpdated = new Date();
+
     const user = await User.findByIdAndUpdate(
       req.userId,
       updateData,
@@ -66,7 +68,8 @@ exports.updateSettings = async (req, res) => {
           'settings.notificationsEnabled': notificationsEnabled !== undefined ? notificationsEnabled : undefined,
           'settings.language': language || undefined,
           'preferences.theme': theme || undefined,
-          'preferences.notifications': notifications || undefined
+          'preferences.notifications': notifications || undefined,
+          'lastUpdated': new Date()
         }
       },
       { new: true }
@@ -94,7 +97,7 @@ exports.updateRole = async (req, res) => {
 
     const user = await User.findByIdAndUpdate(
       req.userId,
-      { role },
+      { role, lastUpdated: new Date() },
       { new: true }
     );
 
@@ -117,7 +120,7 @@ exports.updateSelectedTeam = async (req, res) => {
 
     const user = await User.findByIdAndUpdate(
       req.userId,
-      { selectedTeam: teamId || null },
+      { selectedTeam: teamId || null, lastUpdated: new Date() },
       { new: true }
     ).populate('selectedTeam');
 

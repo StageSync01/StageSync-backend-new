@@ -70,10 +70,4 @@ const userSchema = new mongoose.Schema({
 
 });
 
-// 🔥 Actualizar lastUpdated antes de guardar
-userSchema.pre('save', function(next) {
-  this.lastUpdated = new Date();
-  next();
-});
-
 module.exports = mongoose.model("User", userSchema);

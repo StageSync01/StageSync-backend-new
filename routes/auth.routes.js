@@ -33,9 +33,14 @@ router.get("/google/register", startGoogleAuth("register"));
 
 router.get("/google/callback", (req, res, next) => {
   passport.authenticate("google", { session: false }, (err, user, info) => {
+    console.log("🔐 [Callback] Iniciando callback...");
+    console.log("🔐 [Callback] Error:", err?.message);
+    console.log("🔐 [Callback] User encontrado:", !!user);
+    console.log("🔐 [Callback] Info:", info?.message);
+
     if (err) {
-      console.error("Passport error:", err);
-      return res.redirect("stagesync1://auth?error=auth");
+      console.error("❌ [Callback] Passport error:", err);
+      return res.redirect("stagesync1://auth?error=auth&details=" + encodeURIComponent(err.message));
     }
 
     let redirect = "stagesync1://auth";
@@ -46,14 +51,17 @@ router.get("/google/callback", (req, res, next) => {
         redirect = parsed.redirect || redirect;
       }
     } catch (e) {
-      console.log("❌ Error parsing state:", e);
+      console.log("❌ [Callback] Error parsing state:", e);
     }
 
     if (!user) {
       const errorCode = info?.message || "auth";
       const separator = redirect.includes("?") ? "&" : "?";
+      console.log("❌ [Callback] No user found, redirecting with error:", errorCode);
       return res.redirect(`${redirect}${separator}error=${encodeURIComponent(errorCode)}`);
     }
+
+    console.log("✅ [Callback] User autenticado:", user.email);
 
     const token = jwt.sign(
       {
@@ -61,13 +69,13 @@ router.get("/google/callback", (req, res, next) => {
         email: user.email
       },
       process.env.JWT_SECRET,
-      { expiresIn: "30d" }  // 🔥 Aumentado de 7d a 30d
+      { expiresIn: "30d" }
     );
 
     const separator = redirect.includes("?") ? "&" : "?";
-    const finalUrl = `${redirect}${separator}token=${encodeURIComponent(token)}`;
+    const finalUrl = `${redirect}${separator}token=${encodeURIComponent(token)}&name=${encodeURIComponent(user.name)}&email=${encodeURIComponent(user.email)}`;
 
-    console.log("🚀 FINAL URL:", finalUrl);
+    console.log("✅ [Callback] Redirigiendo a:", finalUrl.substring(0, 80) + "...");
 
     return res.redirect(finalUrl);
   })(req, res, next);

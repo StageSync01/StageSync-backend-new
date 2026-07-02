@@ -113,7 +113,8 @@ router.post("/create", verifyToken, async (req, res) => {
     });
 
     await User.findByIdAndUpdate(userId, {
-      selectedTeam: team._id
+      selectedTeam: team._id,
+      lastUpdated: new Date()
     });
 
     console.log("✅ Equipo creado correctamente:", email);
