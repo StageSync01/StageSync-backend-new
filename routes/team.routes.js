@@ -257,53 +257,95 @@ router.put("/update", verifyToken, async (req, res) => {
 ========================= */
 
 router.post("/test-upload", verifyToken, async (req, res) => {
+  console.log("🧪 [TEST] Iniciando test de upload...");
+  
   try {
-    console.log("🧪 [TEST] Iniciando test de upload a Cloudinary...");
-
+    console.log("🧪 [TEST] Step 1: Verificando request...");
     const { imageBase64 } = req.body;
 
     if (!imageBase64) {
+      console.warn("🧪 [TEST] ❌ No imageBase64 en body");
       return res.status(400).json({
         success: false,
         message: "Se requiere imageBase64"
       });
     }
 
-    console.log("🧪 [TEST] Tamaño del base64:", imageBase64.length);
+    console.log("🧪 [TEST] Step 2: Imagen recibida, tamaño:", imageBase64.length);
 
-    try {
-      const upload = await cloudinary.uploader.upload(imageBase64, {
-        folder: "teams-test",
-        resource_type: "auto"
-      });
-
-      console.log("✅ [TEST] Upload exitoso!");
-      console.log("✅ [TEST] URL:", upload.secure_url);
-
-      res.json({
-        success: true,
-        url: upload.secure_url,
-        public_id: upload.public_id,
-        message: "Upload exitoso"
-      });
-    } catch (cloudError) {
-      console.error("❌ [TEST] Error en Cloudinary:");
-      console.error("❌ [TEST] Mensaje:", cloudError.message);
-      console.error("❌ [TEST] HTTP Code:", cloudError.http_code);
-
-      res.status(500).json({
+    console.log("🧪 [TEST] Step 3: Verificando credenciales Cloudinary...");
+    if (!process.env.CLOUDINARY_CLOUD_NAME) {
+      console.error("❌ CLOUDINARY_CLOUD_NAME no está definido");
+      return res.status(500).json({
         success: false,
-        error: cloudError.message,
-        http_code: cloudError.http_code,
-        message: "Error en Cloudinary"
+        error: "CLOUDINARY_CLOUD_NAME no está configurado"
       });
     }
+
+    if (!process.env.CLOUDINARY_API_KEY) {
+      console.error("❌ CLOUDINARY_API_KEY no está definido");
+      return res.status(500).json({
+        success: false,
+        error: "CLOUDINARY_API_KEY no está configurado"
+      });
+    }
+
+    if (!process.env.CLOUDINARY_API_SECRET) {
+      console.error("❌ CLOUDINARY_API_SECRET no está definido");
+      return res.status(500).json({
+        success: false,
+        error: "CLOUDINARY_API_SECRET no está configurado"
+      });
+    }
+
+    console.log("✅ [TEST] Credenciales presentes");
+
+    console.log("🧪 [TEST] Step 4: Intentando upload a Cloudinary...");
+    
+    const upload = await cloudinary.uploader.upload(imageBase64, {
+      folder: "teams-test",
+      resource_type: "auto"
+    });
+
+    console.log("✅ [TEST] Upload exitoso!");
+    console.log("✅ [TEST] Public ID:", upload.public_id);
+    console.log("✅ [TEST] URL:", upload.secure_url);
+
+    return res.json({
+      success: true,
+      url: upload.secure_url,
+      public_id: upload.public_id,
+      message: "Upload exitoso"
+    });
+
+  } catch (cloudError) {
+    console.error("❌ [TEST] Error en Cloudinary:");
+    console.error("❌ [TEST] Tipo:", cloudError.constructor.name);
+    console.error("❌ [TEST] Mensaje:", cloudError.message);
+    console.error("❌ [TEST] HTTP Code:", cloudError.http_code);
+    console.error("❌ [TEST] Status:", cloudError.status);
+    
+    if (cloudError.error) {
+      console.error("❌ [TEST] Error property:", JSON.stringify(cloudError.error));
+    }
+
+    return res.status(500).json({
+      success: false,
+      error: cloudError.message,
+      http_code: cloudError.http_code,
+      message: "Error en Cloudinary"
+    });
+
   } catch (err) {
-    console.error("❌ [TEST] Error general:", err);
-    res.status(500).json({
+    console.error("❌ [TEST] Error general inesperado:");
+    console.error("❌ [TEST] Tipo:", err.constructor.name);
+    console.error("❌ [TEST] Mensaje:", err.message);
+    console.error("❌ [TEST] Stack:", err.stack);
+
+    return res.status(500).json({
       success: false,
       error: err.message,
-      message: "Error en test"
+      message: "Error inesperado"
     });
   }
 });
