@@ -15,6 +15,13 @@ router.post("/create", verifyToken, async (req, res) => {
     console.log("🔥 [Team] Creando equipo...");
     console.log("📧 Email:", req.userEmail);
     console.log("👤 UserID:", req.userId);
+    console.log("📋 [Team] Body recibido:", {
+      name: req.body.name,
+      description: req.body.description,
+      hasImage: !!req.body.image,
+      imageLength: req.body.image?.length || 0,
+      imageType: typeof req.body.image
+    });
 
     const email = req.userEmail.toLowerCase();
     const userId = req.userId;
@@ -41,12 +48,20 @@ router.post("/create", verifyToken, async (req, res) => {
     // =========================
     // 🔥 UPLOAD CLOUDINARY FIX
     // =========================
+    console.log("🔍 [UPLOAD] Verificando si hay imagen...");
+    console.log("🔍 [UPLOAD] req.body.image existe:", !!req.body.image);
+    console.log("🔍 [UPLOAD] Tipo de image:", typeof req.body.image);
+    console.log("🔍 [UPLOAD] Tamaño de image:", req.body.image?.length || 0);
+
     if (req.body.image) {
-      console.log("📸 Imagen recibida (preview):", req.body.image.substring(0, 50));
+      console.log("📸 [UPLOAD] Imagen recibida, primeros 50 chars:", req.body.image.substring(0, 50));
 
       if (req.body.image.startsWith("data:")) {
         try {
-          console.log("☁️ Subiendo imagen a Cloudinary...");
+          console.log("☁️ [UPLOAD] Iniciando upload a Cloudinary...");
+          console.log("☁️ [UPLOAD] CLOUDINARY_CLOUD_NAME:", process.env.CLOUDINARY_CLOUD_NAME ? "✅ SET" : "❌ MISSING");
+          console.log("☁️ [UPLOAD] CLOUDINARY_API_KEY:", process.env.CLOUDINARY_API_KEY ? "✅ SET" : "❌ MISSING");
+          console.log("☁️ [UPLOAD] CLOUDINARY_API_SECRET:", process.env.CLOUDINARY_API_SECRET ? "✅ SET" : "❌ MISSING");
 
           const upload = await cloudinary.uploader.upload(req.body.image, {
             folder: "teams",
@@ -58,19 +73,23 @@ router.post("/create", verifyToken, async (req, res) => {
 
           imageUrl = upload.secure_url;
 
-          console.log("✅ Imagen subida correctamente:", imageUrl);
+          console.log("✅ [UPLOAD] Imagen subida correctamente!");
+          console.log("✅ [UPLOAD] URL:", imageUrl);
 
         } catch (cloudError) {
-          console.error("❌ CLOUDINARY ERROR COMPLETO:");
-          console.error("Error:", cloudError.message);
-          console.error("Status:", cloudError.status);
-          console.error("Stack:", cloudError.stack);
+          console.error("❌ [UPLOAD] ERROR EN CLOUDINARY:");
+          console.error("❌ [UPLOAD] Mensaje:", cloudError.message);
+          console.error("❌ [UPLOAD] Status:", cloudError.status);
+          console.error("❌ [UPLOAD] HTTP Code:", cloudError.http_code);
+          console.error("❌ [UPLOAD] Stack:", cloudError.stack);
+          console.error("❌ [UPLOAD] Error completo:", JSON.stringify(cloudError, null, 2));
         }
       } else {
-        console.log("⚠️ Imagen no es base64 válida");
+        console.log("⚠️ [UPLOAD] Imagen no comienza con 'data:' - formato inválido");
+        console.log("⚠️ [UPLOAD] Primeros 50 caracteres:", req.body.image.substring(0, 50));
       }
     } else {
-      console.log("⚠️ No se recibió imagen");
+      console.log("⚠️ [UPLOAD] ❌ NO SE RECIBIÓ IMAGEN en req.body.image");
     }
 
     // =========================
